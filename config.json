@@ -1,0 +1,8 @@
+{
+    "logLevel": "DEBUG",
+    "logFormat": "{levelname} - {processName}:{pathname}:{funcName}:{lineno} @ {asctime} > {message}",
+    "logFile": null,
+    "projectRoot": "projects",
+    "pipPath": "pip",
+    "workerPoolLimit": 32
+}

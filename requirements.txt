@@ -1,0 +1,5 @@
+fastapi
+cryptography
+rsa
+pymongo
+gitpython
