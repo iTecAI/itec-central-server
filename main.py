@@ -9,8 +9,18 @@ from argparse import ArgumentParser
 import sys
 from concurrent.futures import ThreadPoolExecutor
 from git.repo.base import Repo
+import hashlib
+import random
+import time
+import pymongo
+import uvicorn
+from fastapi import FastAPI, Request, Response
 
 KEYS = ['name', 'entrypoint', 'appName']
+
+def getRootKey():
+    with open('rootkey', 'r') as f:
+        return f.read()
 
 def pip_install(name):
     conf = json.loads(os.environ['X_ICS_CONFIG'])
@@ -110,6 +120,29 @@ if __name__ == '__main__':
     if not os.path.exists(os.path.join(*CONFIG['projectRoot'].split('/'))):
         os.makedirs(os.path.join(*CONFIG['projectRoot'].split('/')))
         debug(f'Project root directory did not exist. Created directory {CONFIG["projectRoot"]}')
+    
+    if not os.path.exists('rootkey'):
+        with open('rootkey', 'w') as rk:
+            root = hashlib.sha256(str(random.SystemRandom(time.time()).random() + (time.time() + random.SystemRandom(random.random()).random())).encode('utf-8')).hexdigest()
+            rk.write(root)
+        info('No rootkey found, new rootkey created & saved.')
+
+    info('Checking database...')
+    DB_CLIENT = pymongo.MongoClient(host=CONFIG['mongoDB']['host'], port=CONFIG['mongoDB']['port'])
+    cur_dbs = DB_CLIENT.list_database_names()
+    if not CONFIG['mongoDB']['database'] in cur_dbs:
+        debug('Database not created. Creating now.')
+        db = DB_CLIENT[CONFIG['mongoDB']['database']]
+        debug('Loading security collection')
+        security = db.security
+        debug('Adding root key to security entries.')
+        security.insert_one({
+            'name': 'root',
+            'endpoints': ['/'],
+            'key': getRootKey()
+        })
+    DB_CLIENT.close()
+    debug('Completed DB check.')
     
     info('Starting server, first-run.')
     while True:

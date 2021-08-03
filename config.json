@@ -4,5 +4,10 @@
     "logFile": null,
     "projectRoot": "projects",
     "pipPath": "pip",
-    "workerPoolLimit": 32
+    "workerPoolLimit": 32,
+    "mongoDB": {
+        "host": "localhost",
+        "port": 27017,
+        "database": "ICSTEST"
+    }
 }
